@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SahayMitra - Credit for All</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Kept for future flexibility, but not used by default
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-blue': '#3B82F6',
+                        'brand-blue-dark': '#2563EB',
+                        'brand-amber': '#FBBF24',
+                        'light-bg': '#F8F9FA',
+                        'surface': '#FFFFFF',
+                        'light-border': '#E5E7EB',
+                        'text-primary': '#1F2937',
+                        'text-secondary': '#6B7280',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: var(--bg-color, #F8F9FA);
+            color: var(--text-color, #1F2937);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .app-scroller {
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Poppins', sans-serif; }
+        
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .modal-backdrop, .toast { transition: opacity 0.3s ease-in-out; }
+        .modal-content { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
+
+        .app-scroller::-webkit-scrollbar { width: 8px; }
+        .app-scroller::-webkit-scrollbar-track { background: transparent; }
+        .app-scroller::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 4px; }
+        .app-scroller::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+
+        .solid-card {
+            background-color: var(--surface-color, #FFFFFF);
+            border: 1px solid var(--border-color, #E5E7EB);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: all 0.3s ease;
+        }
+        .solid-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+        }
+        a.solid-card {
+            display: block;
+        }
+
+        .primary-btn {
+            background-color: #3B82F6;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+            border: none;
+        }
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            background-color: #2563EB;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+        }
+        .primary-btn:disabled {
+            background-color: #9CA3AF;
+            box-shadow: none;
+            transform: none;
+            cursor: not-allowed;
+        }
+
+
+        .chat-bubble-user { background-color: #3B82F6; color: white; }
+        .chat-bubble-assistant { background-color: #E5E7EB; color: #1F2937; }
+
+        .step.completed .step-circle { background-color: #3B82F6; border-color: #3B82F6; color: white; }
+        .step.active .step-circle { border-color: #3B82F6; color: #3B82F6; }
+        .step-line.completed { background-color: #3B82F6; }
+        
+        .face-reticle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 250px;
+            height: 350px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.7), 0 0 0 2000px rgba(255,255,255,0.8);
+            animation: pulse-reticle 2s infinite ease-in-out;
+        }
+        @keyframes pulse-reticle {
+            0% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.7), 0 0 0 2000px rgba(255,255,255,0.8); }
+            50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.3), 0 0 0 2000px rgba(255,255,255,0.8); }
+            100% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.7), 0 0 0 2000px rgba(255,255,255,0.8); }
+        }
+        .nav-link.active-nav {
+            color: #3B82F6 !important;
+            font-weight: 600;
+            position: relative;
+        }
+        .nav-link.active-nav::after {
+            content: '';
+            position: absolute;
+            bottom: -28px; /* Adjusted for h-20 header */
+            left: 1rem;
+            right: 1rem;
+            height: 3px;
+            background-color: #3B82F6;
+            border-radius: 1.5px;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.22.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="font-sans bg-light-bg">
+    <div id="app-container" class="app-scroller">
+        <!-- App Header -->
+        <header class="bg-surface/80 backdrop-blur-lg sticky top-0 z-40">
+            <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20 border-b border-light-border">
+                    <div class="flex items-center">
+                        <a href="#landing" class="nav-link text-3xl font-bold text-text-primary flex items-center gap-3">
+                            <i class="fas fa-hands-helping text-brand-blue"></i>
+                            <span class="font-heading">SahayMitra</span>
+                        </a>
+                    </div>
+                    <div id="main-nav" class="hidden md:flex items-center space-x-2">
+                        <a href="#apply-loan" class="nav-link text-text-secondary hover:text-text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors">Apply for Loan</a>
+                        <a href="#dashboard" class="nav-link text-text-secondary hover:text-text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</a>
+                        <a href="#communities" class="nav-link text-text-secondary hover:text-text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors">Communities</a>
+                        <a href="#ai-scanner" class="nav-link text-text-secondary hover:text-text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors">AI Scanner</a>
+                    </div>
+                     <div class="flex items-center">
+                         <button id="login-btn" class="primary-btn font-semibold py-2 px-5 rounded-md">Login</button>
+                         <div id="user-avatar" class="hidden items-center gap-3">
+                             <span id="user-name-display" class="font-semibold text-sm text-text-primary"></span>
+                             <button id="logout-btn" class="bg-red-100 text-red-600 text-xs font-bold w-8 h-8 rounded-full hover:bg-red-200 transition-colors flex items-center justify-center"><i class="fas fa-sign-out-alt"></i></button>
+                         </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Landing Page -->
+            <div id="landing-page" class="page">
+                <!-- Hero Section -->
+                <section class="relative text-text-primary text-center py-24 md:py-40 px-4">
+                    <div class="relative max-w-4xl mx-auto">
+                        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight font-heading">Credit for <span class="text-brand-blue">All</span>, by <span class="text-brand-blue">All</span></h1>
+                        <p class="mt-6 text-lg md:text-xl max-w-3xl mx-auto text-text-secondary">An AI-powered platform creating a transparent and fair credit system for everyone, especially those with limited digital footprints.</p>
+                        <div class="mt-10 flex justify-center gap-4">
+                            <a href="#apply-loan" class="nav-link primary-btn text-white font-semibold py-3 px-8 rounded-md">Apply for a Loan</a>
+                            <a href="#dashboard" class="nav-link bg-surface text-text-primary border border-light-border font-semibold py-3 px-8 rounded-md hover:bg-gray-100 transition-colors">Explore Lending</a>
+                        </div>
+                    </div>
+                </section>
+                <!-- Features Section -->
+                <section class="py-20 sm:py-28 bg-white">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="text-center">
+                            <h2 class="text-4xl font-extrabold text-text-primary font-heading">A Fairer Path to Finance</h2>
+                            <p class="mt-4 max-w-2xl mx-auto text-lg text-text-secondary">Explore the features that make our platform unique.</p>
+                        </div>
+                        <div class="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                            <a href="#apply-loan" class="nav-link solid-card p-8 rounded-xl text-center">
+                                <i class="fas fa-comments text-3xl text-brand-blue mb-4"></i>
+                                <h3 class="text-lg font-semibold text-text-primary">Conversational Applications</h3>
+                                <p class="mt-2 text-text-secondary">An easy-to-use chat interface with voice guides you through the loan process in your own language.</p>
+                            </a>
+                            <a href="#communities" class="nav-link solid-card p-8 rounded-xl text-center">
+                                <i class="fas fa-users text-3xl text-brand-blue mb-4"></i>
+                                <h3 class="text-lg font-semibold text-text-primary">Community Lending Hub</h3>
+                                <p class="mt-2 text-text-secondary">Connect with local lending communities and find the right support for your goals.</p>
+                            </a>
+                            <a href="#ai-scanner" class="nav-link solid-card p-8 rounded-xl text-center">
+                                <i class="fas fa-camera text-3xl text-brand-blue mb-4"></i>
+                                <h3 class="text-lg font-semibold text-text-primary">AI Record Scanner</h3>
+                                <p class="mt-2 text-text-secondary">Lenders can instantly digitize paper records with a simple photo, improving data accuracy.</p>
+                            </a>
+                            <div class="solid-card p-8 rounded-xl text-center">
+                                <i class="fas fa-shield-alt text-3xl text-brand-blue mb-4"></i>
+                                <h3 class="text-lg font-semibold text-text-primary">Fairness by Design</h3>
+                                <p class="mt-2 text-text-secondary">Our algorithms ensure fair credit assessment, even for users with a limited digital footprint.</p>
+                            </div>
+                            <div class="solid-card p-8 rounded-xl text-center">
+                                <i class="fas fa-fingerprint text-3xl text-brand-blue mb-4"></i>
+                                <h3 class="text-lg font-semibold text-text-primary">Biometric E-KYC</h3>
+                                <p class="mt-2 text-text-secondary">Securely verify your identity using our advanced facial recognition technology for a quick onboarding.</p>
+                            </div>
+                            <div class="solid-card p-8 rounded-xl text-center">
+                                <i class="fas fa-star text-3xl text-brand-blue mb-4"></i>
+                                <h3 class="text-lg font-semibold text-text-primary">Impact Rewards</h3>
+                                <p class="mt-2 text-text-secondary">Get rewarded with cashback and local goods for timely repayments and community work.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Apply for Loan Page (Chatbot) -->
+            <div id="apply-loan-page" class="page">
+                <div class="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8">
+                     <div class="text-center mb-8">
+                        <h1 class="text-4xl font-bold text-text-primary font-heading">Loan Application</h1>
+                        <p class="text-text-secondary mt-2">Let's start your loan application. Our assistant will guide you through the process.</p>
+                    </div>
+                    <div class="solid-card rounded-xl shadow-lg">
+                        <div id="chat-window" class="h-[60vh] overflow-y-auto p-6 space-y-6 flex flex-col">
+                            <!-- Chat messages will be appended here -->
+                            <div id="thinking-indicator" class="hidden chat-bubble-assistant self-start w-fit max-w-sm rounded-xl px-4 py-3 shadow-md">
+                                <div class="flex items-center justify-center space-x-1.5">
+                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-light-border flex items-center gap-4">
+                            <input type="text" id="chat-input" class="flex-grow bg-gray-100 rounded-full py-3 px-5 text-text-primary placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-blue" placeholder="Type your message...">
+                            <button id="chat-send-btn" class="w-12 h-12 primary-btn rounded-full flex-shrink-0 flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
+                            <button id="chat-voice-btn" class="w-12 h-12 bg-gray-200 rounded-full text-text-secondary flex-shrink-0 flex items-center justify-center hover:bg-gray-300 transition-colors"><i class="fas fa-microphone"></i></button>
+                            <button id="chat-mute-btn" class="w-12 h-12 bg-gray-200 rounded-full text-text-secondary flex-shrink-0 flex items-center justify-center hover:bg-gray-300 transition-colors"><i class="fas fa-volume-up"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page">
+                 <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+                    <h1 class="text-4xl font-bold text-text-primary font-heading">Your Dashboard</h1>
+                    <div class="my-8">
+                        <div class="inline-flex bg-gray-100 p-1 rounded-lg">
+                             <button id="borrower-view-btn" class="dashboard-toggle-btn active px-6 py-2 rounded-md text-sm font-semibold">
+                                <i class="fas fa-user mr-2"></i>Borrower View
+                            </button>
+                            <button id="lender-view-btn" class="dashboard-toggle-btn px-6 py-2 rounded-md text-sm font-semibold text-text-secondary">
+                                <i class="fas fa-briefcase mr-2"></i>Lender View
+                            </button>
+                        </div>
+                    </div>
+                    <div id="dashboard-content">
+                        <!-- Content for Borrower/Lender will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Scanner Page -->
+            <div id="ai-scanner-page" class="page">
+                 <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+                     <div class="text-center mb-10">
+                        <h1 class="text-4xl font-bold text-text-primary font-heading">AI Scanner for Non-Digital Records</h1>
+                        <p class="text-text-secondary mt-2">Digitize paper-based lending records instantly. Upload a photo of your ledger to get started.</p>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="solid-card p-6 rounded-xl flex flex-col items-center justify-center text-center">
+                            <div id="image-preview-container" class="w-full h-64 border-2 border-dashed border-light-border rounded-lg flex items-center justify-center bg-light-bg">
+                                <div id="image-placeholder">
+                                    <i class="fas fa-upload text-5xl text-gray-400"></i>
+                                    <p class="mt-4 text-text-secondary">Upload an image to see a preview</p>
+                                </div>
+                                <img id="image-preview" src="" class="hidden max-h-full max-w-full rounded-md"/>
+                            </div>
+                            <input type="file" id="image-upload-input" class="hidden" accept="image/*">
+                            <div class="mt-6 flex gap-4 w-full">
+                                <button id="choose-image-btn" class="flex-1 bg-gray-200 text-text-primary font-semibold py-3 px-4 rounded-md hover:bg-gray-300 transition"><i class="fas fa-image mr-2"></i>Choose Image</button>
+                                <button id="scan-record-btn" class="flex-1 primary-btn text-white font-semibold py-3 px-4 rounded-md" disabled><i class="fas fa-cogs mr-2"></i>Scan Record</button>
+                            </div>
+                        </div>
+                        <div class="solid-card p-6 rounded-xl">
+                            <h2 class="text-xl font-semibold text-text-primary mb-4">Extracted CSV Data</h2>
+                            <div id="scanner-output-container" class="relative w-full h-full min-h-[250px] bg-gray-50 rounded-md p-4">
+                                <pre id="scanner-output" class="text-gray-500 text-sm whitespace-pre-wrap">Scanned data will appear here...</pre>
+                                <div id="scanner-loader" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center hidden">
+                                    <i class="fas fa-spinner fa-spin text-4xl text-brand-blue"></i>
+                                    <p class="mt-4 text-gray-600">Analyzing Document...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Communities Page -->
+            <div id="communities-page" class="page">
+                <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+                     <div class="text-center mb-12">
+                        <h1 class="text-4xl font-bold text-text-primary font-heading">Browse Communities</h1>
+                        <p class="text-text-secondary mt-2">Find and join local lending circles to grow together.</p>
+                    </div>
+                    <div id="communities-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Community cards will be rendered here -->
+                    </div>
+                </div>
+            </div>
+            
+             <!-- E-KYC Page -->
+            <div id="ekyc-page" class="page">
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="max-w-xl w-full solid-card p-8 rounded-xl shadow-lg">
+                        <h2 class="text-3xl font-bold text-center text-text-primary mb-2 font-heading">E-KYC Verification</h2>
+                        <p class="text-center text-text-secondary mb-8">Please complete these steps to secure your account.</p>
+
+                        <!-- Stepper -->
+                        <div class="stepper flex items-center mb-8">
+                            <!-- Stepper steps will be dynamically generated here -->
+                        </div>
+
+                        <!-- Step Content -->
+                        <div id="kyc-content-container">
+                            <!-- KYC Step content will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Generic Modal -->
+    <div id="modal" class="modal-backdrop fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div id="modal-content" class="modal-content solid-card w-full rounded-lg shadow-xl transform scale-95 opacity-0">
+            <div id="modal-header" class="p-5 border-b border-light-border flex justify-between items-center">
+                <h2 id="modal-title" class="text-xl font-semibold text-text-primary font-heading"></h2>
+                <button id="modal-close-btn" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6">
+                <!-- Modal content goes here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 right-8 primary-btn text-white py-3 px-6 rounded-lg shadow-lg flex items-center gap-4 opacity-0 pointer-events-none transition-all duration-300 transform translate-y-4">
+        <i id="toast-icon" class="fas fa-check-circle"></i>
+        <span id="toast-message" class="font-semibold"></span>
+    </div>
+
+    <!-- Main application script -->
+    <script type="module" src="/index.js"></script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
